@@ -230,6 +230,27 @@ public class RCTMGLMapView extends MapView implements
 
     }
 
+    private boolean mDetached = false;
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        if (mDetached) {
+            onStart();
+            onResume();
+            getMapAsync(this);
+            mDetached = false;
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        mDetached = true;
+    }
+
     public void enqueuePreRenderMapMethod(Integer methodID, @Nullable ReadableArray args) {
         mPreRenderMethodMap.put(methodID, args);
     }
@@ -413,7 +434,7 @@ public class RCTMGLMapView extends MapView implements
             mCameraUpdateQueue.execute(mMap);
         }
 
-        if (mQueuedFeatures.size() > 0) {
+        if (mQueuedFeatures != null && mQueuedFeatures.size() > 0) {
             for (int i = 0; i < mQueuedFeatures.size(); i++) {
                 AbstractMapFeature feature = mQueuedFeatures.get(i);
                 feature.addToMap(this);
@@ -1270,8 +1291,13 @@ public class RCTMGLMapView extends MapView implements
         properties.putBoolean("animated", isAnimated);
         properties.putBoolean("isUserInteraction", mCameraChangeTracker.isUserInteraction());
 
-        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
-        properties.putArray("visibleBounds", GeoJSONUtils.fromLatLngBounds(visibleRegion.latLngBounds));
+        try {
+            // This crashes sometimes for some reason, seems fine to ignore.
+            VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+            properties.putArray("visibleBounds", GeoJSONUtils.fromLatLngBounds(visibleRegion.latLngBounds));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
         return GeoJSONUtils.toPointFeature(latLng, properties);
     }
