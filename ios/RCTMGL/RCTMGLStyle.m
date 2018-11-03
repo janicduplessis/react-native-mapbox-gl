@@ -1018,7 +1018,7 @@
         // TODO throw execpetion
         return;
     }
-    layer.iconAnchor = styleValue.mglStyleValue;
+    layer.iconAnchor = [MGLStyleValue valueWithRawValue:@(MGLIconAnchorBottom)];
 }
 
 - (void)setIconPitchAlignment:(MGLSymbolStyleLayer *)layer withReactStyleValue:(RCTMGLStyleValue *)styleValue
